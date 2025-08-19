@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أداة تحميل الفيديوهات</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl bg-gray-800 p-8 md:p-12 rounded-3xl shadow-2xl space-y-8 text-center border-2 border-gray-700">
+        <!-- Main Title -->
+        <h1 class="text-3xl md:text-4xl font-bold text-teal-400">
+            أداة تحميل الفيديوهات
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-gray-300 text-lg">
+            قم بتحميل الفيديوهات من يوتيوب، إنستغرام، أو فيسبوك.
+        </p>
+
+        <!-- Download Form -->
+        <form id="downloadForm" class="space-y-6">
+            <!-- URL Input -->
+            <div>
+                <label for="videoUrl" class="sr-only">رابط الفيديو</label>
+                <input
+                    type="url"
+                    id="videoUrl"
+                    placeholder="الصق رابط الفيديو هنا..."
+                    required
+                    class="w-full px-6 py-4 rounded-full bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-300"
+                />
+            </div>
+            
+            <!-- Format and Quality Options (Initially Hidden) -->
+            <div id="optionsContainer" class="hidden flex flex-col items-center space-y-4">
+                <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
+                    <!-- MP4 Button -->
+                    <button
+                        type="button"
+                        id="mp4Button"
+                        class="w-full sm:w-1/2 px-6 py-4 rounded-full font-bold text-lg bg-teal-500 text-gray-900 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400 transition duration-300"
+                    >
+                        تحميل MP4
+                    </button>
+                    <!-- MP3 Button -->
+                    <button
+                        type="button"
+                        id="mp3Button"
+                        class="w-full sm:w-1/2 px-6 py-4 rounded-full font-bold text-lg bg-teal-500 text-gray-900 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400 transition duration-300"
+                    >
+                        تحميل MP3
+                    </button>
+                </div>
+
+                <!-- Quality Dropdown -->
+                <div class="w-full">
+                    <select
+                        id="qualitySelect"
+                        class="w-full px-6 py-4 rounded-full bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-300"
+                    >
+                        <option value="best" selected>أفضل جودة متاحة</option>
+                        <option value="1080p">1080p</option>
+                        <option value="720p">720p</option>
+                        <option value="480p">480p</option>
+                        <option value="360p">360p</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Initial Submit Button -->
+            <button
+                type="submit"
+                id="submitButton"
+                class="w-full px-6 py-4 rounded-full font-bold text-lg bg-gray-600 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300"
+            >
+                البدء
+            </button>
+        </form>
+
+        <!-- Message Box for user feedback -->
+        <div id="messageBox" class="hidden mt-4 p-4 rounded-xl bg-gray-700">
+            <p id="messageText" class="font-semibold text-white"></p>
+        </div>
+
+        <!-- Disclaimer Section -->
+        <div class="pt-8 text-gray-400 text-sm">
+            <h3 class="font-bold text-base mb-2">إخلاء مسؤولية</h3>
+            <p class="text-justify leading-relaxed">
+                هذا الموقع هو واجهة أمامية مصممة لأغراض العرض التوضيحي فقط. 
+                يرجى استخدام هذا الموقع بمسؤولية واحترام حقوق النشر.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Get references to all DOM elements
+        const form = document.getElementById('downloadForm');
+        const urlInput = document.getElementById('videoUrl');
+        const submitButton = document.getElementById('submitButton');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const mp4Button = document.getElementById('mp4Button');
+        const mp3Button = document.getElementById('mp3Button');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        // Function to show messages to the user
+        function showMessage(message, type = 'info') {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.remove('bg-red-800', 'text-red-200', 'bg-green-800', 'text-green-200', 'bg-blue-800', 'text-blue-200');
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-800', 'text-red-200');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-800', 'text-green-200');
+            } else {
+                messageBox.classList.add('bg-gray-700', 'text-white');
+            }
+        }
+
+        // Function to handle the form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            messageBox.classList.add('hidden');
+            const videoUrl = urlInput.value.trim();
+            if (!videoUrl) {
+                showMessage('الرجاء إدخال رابط فيديو صالح.', 'error');
+                return;
+            }
+
+            // Show download options after URL is entered
+            optionsContainer.classList.remove('hidden');
+            submitButton.classList.add('hidden');
+            showMessage('تم إدخال الرابط. اختر خيارات التحميل.', 'info');
+        });
+
+        // Function to handle the download request
+        async function handleDownload(format) {
+            const url = urlInput.value.trim();
+            const quality = qualitySelect.value;
+            
+            showMessage('جاري إرسال طلب التحميل، يرجى الانتظار...', 'info');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, format, quality }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'حدث خطأ غير معروف');
+                }
+
+                // Get the file content as a blob
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'download';
+                if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+                    filename = contentDisposition.split('filename=')[1].trim().replace(/"/g, '');
+                } else {
+                    filename += (format === 'mp4' ? '.mp4' : '.mp3');
+                }
+
+                // Create a temporary URL for the blob and trigger a download
+                const tempUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = tempUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(tempUrl);
+                a.remove();
+
+                showMessage('تم بدء التحميل بنجاح!', 'success');
+            } catch (error) {
+                showMessage(`حدث خطأ أثناء التحميل: ${error.message}`, 'error');
+            }
+        }
+
+        // Event listener for the MP4 button
+        mp4Button.addEventListener('click', () => handleDownload('mp4'));
+
+        // Event listener for the MP3 button
+        mp3Button.addEventListener('click', () => handleDownload('mp3'));
+
+        // Event listener to reset the state when the URL changes
+        urlInput.addEventListener('input', () => {
+            optionsContainer.classList.add('hidden');
+            submitButton.classList.remove('hidden');
+            messageBox.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
